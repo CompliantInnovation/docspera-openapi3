@@ -5,7 +5,7 @@ servers:
     url: https://virtserver.swaggerhub.com/DocSpera/patient-survey-api/1.0.0
 info:
   description: APIs to serve patient surveys
-  version: "1.0.0"
+  version: "2.0.0-alpha1"
   title: Patient Survey APIs
   contact:
     email: luca@docspera.com
