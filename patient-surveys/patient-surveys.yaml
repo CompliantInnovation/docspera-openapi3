@@ -4,61 +4,155 @@ servers:
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/DocSpera/patient-survey-api/1.0.0
 info:
-  description: This is a simple API
+  description: APIs to serve patient surveys
   version: "1.0.0"
-  title: Simple Inventory API
+  title: Patient Survey APIs
   contact:
-    email: you@your-company.com
+    email: luca@docspera.com
   license:
-    name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+    name: Proprietary
 tags:
-  - name: admins
-    description: Secured Admin-only calls
-  - name: developers
-    description: Operations available to regular developers
+  - name: patient
+    description: patient survey apis, available via secured links
 paths:
-  /inventory:
+  /survey/{surveyId}/questions:
     get:
       tags:
-        - developers
-      summary: searches inventory
-      operationId: searchInventory
-      description: |
-        By passing in the appropriate options, you can search for
-        available inventory in the system
+        - patient
+      summary: gets the survey and questions
+      operationId: getSurvey
       parameters:
-        - in: query
-          name: searchString
-          description: pass an optional search string for looking up inventory
-          required: false
+        - in: path
+          name: surveyId
+          description: survey uuid
+          required: true
           schema:
             type: string
-        - in: query
-          name: skip
-          description: number of records to skip for pagination
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-        - in: query
-          name: limit
-          description: maximum number of records to return
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 50
+            format: uuid
       responses:
         '200':
-          description: search results matching criteria
+          description: survey response
           content:
             application/json:
               schema:
-                type: array
+                $ref: '#/components/schemas/Survey'
 components:
   schemas:
-    Question:
+    Survey:
+      type: object
+      required:
+        - id
+        - provider
+        - sections
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: survey uuid, also present in the request url
+        provider:
+          type: object
+          nullable: true
+          required:
+            - name
+            - picture
+          properties:
+            name:
+              type: string
+              description: provider name
+            picture:
+              type: string
+              format: url
+              description: url to provider profile picture
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Section'
+    Section:
+      type: object
+      required:
+        - order
+        - title
+        - subtext
+        - icon
+        - subsections
+      properties:
+        order:
+          type: integer
+          format: int64
+          description: relative order amongst siblings, lower (including negatives) is higher priority
+        title:
+          type: string
+          description: title of the section
+        subtext:
+          type: string
+          description: subtext of the header for the section
+        icon:
+          type: string
+          format: url
+          description: url to the icon to be displayed on the section header
+          nullable: true
+        subsections:
+          type: array
+          description: array of subsections to be displayed under this heading
+          items:
+            $ref: '#/components/schemas/SubSection'
+    SubSection:
+      type: object
+      required:
+        - title
+        - icon
+        - questions
+      properties:
+        title:
+          type: string
+          description: title of the subsection
+        icon:
+          type: string
+          format: url
+          description: url to the icon to be displayed on the subsection header
+          nullable: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientQuestion'
+    PatientQuestion:
+      type: object
+      required:
+        - id
+        - slug
+        - prompt
+        - input
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: unique question id
+        slug:
+          type: string
+          description: question slug description, useful when a question is reused on multiple surveys or for debugging
+        prompt:
+          type: string
+          description: prompt that the patient is presented with
+        input:
+          oneOf:
+            - $ref: '#/components/schemas/EnumeratedDropdown'
+            - $ref: '#/components/schemas/RangedValueDropdown'
+            - $ref: '#/components/schemas/EnumeratedRadioSelect'
+            - $ref: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+            - $ref: '#/components/schemas/NumericInput'
+            - $ref: '#/components/schemas/DimensionInput'
+            - $ref: '#/components/schemas/NumericRangedSliderInput'
+          discriminator:
+            propertyName: type
+            mapping:
+              enumDropdown: '#/components/schemas/EnumeratedDropdown'
+              rangeDropdown: '#/components/schemas/RangedValueDropdown'
+              enumRadio: '#/components/schemas/EnumeratedRadioSelect'
+              enumRadioMultipleChoice: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+              numInput: '#/components/schemas/NumericInput'
+              dimensionInput: '#/components/schemas/DimensionInput'
+              rangeSlider: '#/components/schemas/NumericRangedSliderInput'
+    QuestionInput:
       type: object
       required:
         - type
@@ -71,8 +165,14 @@ components:
           type: object
           additionalProperties: true
     EnumeratedDropdown:
+      description: |
+        Dropdown showing an enumerated list of options with corresponding `display => value` relationships.
+        Options are arranged relative to each other based on `order` key. Lower `order` values appear first (at the top) in the list of options.
+        The option with the highest priority (lowest `order` value) that contains `isDefault : true` is default selected.
+        If no option is denotated as default, then the first option in the list (again, lowest `order` value) is used as default selected (this is by nature of HTML inputs as well).
+        When responding, values are exactly the same type and value as the value provided from the question specification.
       allOf:
-        - $ref: '#/components/schemas/Question'
+        - $ref: '#/components/schemas/QuestionInput'
         - type: object
           required:
             - type
@@ -114,25 +214,31 @@ components:
                       value: true
                       order: 0
                       isDefault: true
-          example:
-            type: enumDropdown
-            options:
-              enumns:
-                - display: ''
-                  value: -1
-                  order: 0
-                  isDefault: true
-                - display: 'Yes'
-                  value: true
-                  order: 1
-                  isDefault: false
-                - display: 'No'
-                  value: false
-                  order: 2
-                  isDefault: false
+      example:
+        type: enumDropdown
+        options:
+          enumns:
+            - display: ''
+              value: -1
+              order: 0
+              isDefault: true
+            - display: 'Yes'
+              value: true
+              order: 1
+              isDefault: false
+            - display: 'No'
+              value: false
+              order: 2
+              isDefault: false
     RangedValueDropdown:
+      description: |
+        Dropdown showing a computed list of numerically ranged values, according the `min`, `max`, `step`, and `precision`.
+        If `step` is `null` or not present, assumed value of 1.
+        If `precision` is `null` or not present, no precision considerations will be made.
+        Values are arranged in descending order when `order: -1`, and ascending when `order: 1`.
+        The example below will produce a dropdown of values from 5-1 descending with single-digit precision.
       allOf:
-        - $ref: '#/components/schemas/Question'
+        - $ref: '#/components/schemas/QuestionInput'
         - type: object
           required:
             - type
@@ -171,17 +277,23 @@ components:
                   format: int32
                   enum: [-1, 1]
                   description: sets ascending or decending from left to right with values of 1 and -1 respectively
-          example:
-            type: rangeDropdown
-            options:
-              min: 0
-              max: 5
-              step: 1
-              precision: 1
-              order: -1
+      example:
+        type: rangeDropdown
+        options:
+          min: 0
+          max: 5
+          step: 1
+          precision: 1
+          order: -1
     EnumeratedRadioSelect:
+      description: |
+        Analogous to enumerated drop down, except displayed as radio buttons, showing an enumerated list of options with corresponding `display => value` relationships.
+        When `orientation : 1`, the radio options are displayed horizantally. When `orientation : -1`, the radio options are displayed vertically.
+        Options are arranged relative to each other based on `order` key. Lower `order` values appear first (at the top or left-most) in the list of options.
+        The option with the highest priority (lowest `order` value) that contains `isDefault : true` is default selected.
+        If no option is denotated as default, then no option is defalt selected.
       allOf:
-        - $ref: '#/components/schemas/Question'
+        - $ref: '#/components/schemas/QuestionInput'
         - type: object
           required:
             - type
@@ -223,25 +335,28 @@ components:
                       value: true
                       order: 0
                       isDefault: true
-          example:
-            type: enumDropdown
-            options:
-              enumns:
-                - display: ''
-                  value: -1
-                  order: 0
-                  isDefault: true
-                - display: 'Yes'
-                  value: true
-                  order: 1
-                  isDefault: false
-                - display: 'No'
-                  value: false
-                  order: 2
-                  isDefault: false
+      example:
+        type: enumDropdown
+        options:
+          enumns:
+            - display: ''
+              value: -1
+              order: 0
+              isDefault: true
+            - display: 'Yes'
+              value: true
+              order: 1
+              isDefault: false
+            - display: 'No'
+              value: false
+              order: 2
+              isDefault: false
     EnumeratedMultipleChoiceRadioSelect:
+      description: |
+        An extension of the Enumerated Radio Select, this allows for multiple radio options to be selected.
+        `isDefault` can be defined multiple times and defines an input that is selected by default.
       allOf:
-        - $ref: '#/components/schemas/Question'
+        - $ref: '#/components/schemas/QuestionInput'
         - type: object
           required:
             - type
@@ -288,20 +403,230 @@ components:
                       value: true
                       order: 0
                       isDefault: true
-          example:
-            type: enumRadioMultipleChoice
+      example:
+        type: enumRadioMultipleChoice
+        options:
+          orientation: 1
+          enumns:
+            - display: ''
+              value: -1
+              order: 0
+              isDefault: true
+            - display: 'Yes'
+              value: true
+              order: 1
+              isDefault: false
+            - display: 'No'
+              value: false
+              order: 2
+              isDefault: false
+    NumericInput:
+      description: |
+        Records a numeric input from the user
+        If `step` is `null` or not present, assumed value of 1.
+        If `precision` is `null` or not present, no precision considerations will be made.
+      allOf:
+        - $ref: '#/components/schemas/QuestionInput'
+        - type: object
+          required:
+            - type
+            - options
+          properties:
+            type:
+              type: string
+              pattern: "^numInput$"
             options:
-              orientation: 1
-              enumns:
-                - display: ''
-                  value: -1
-                  order: 0
-                  isDefault: true
-                - display: 'Yes'
-                  value: true
-                  order: 1
-                  isDefault: false
-                - display: 'No'
-                  value: false
-                  order: 2
-                  isDefault: false
+              type: object
+              required:
+                - min
+                - max
+              properties:
+                min:
+                  type: integer
+                  format: int64
+                  description: minimum value for slider
+                max:
+                  type: integer
+                  format: int64
+                  description: maximum value for slider
+                step:
+                  type: number
+                  format: double
+                  default: 1.00
+                  description: steps in the slider inbetween the ranges, should fit in the specified range
+                precision:
+                  type: integer
+                  format: int64
+                  description: number of significant digits to record in the result, if null or not present no precision considerations will be made
+                  default: null
+                  nullable: true
+      example:
+        type: numInput
+        options:
+          min: 0
+          max: 5
+          step: 1
+          precision: 1
+    DimensionInput:
+      description: |
+        Records a measurement input from the user with units.
+        Units are always input in the patient's default locale (usually `imperial`). The exact unit is determined by the dimension and is delegated to the frontend.
+        Units are converted to the destination unit if specified in the `recordUnit` property (`null` by defaul or not specified). Note that the conversion is transparent to the user and should not be made known. This is meerly a standardization procedure.
+        Patient inputs can be split into major and minor parts (e.g. feet and inches, pounds and ounces, etc.) unless `noMajorMinor` flag is `true` (`false` by default or not
+        specified).
+        If `precision` is `null` or not present, no precision considerations will be made.
+      allOf:
+        - $ref: '#/components/schemas/QuestionInput'
+        - type: object
+          required:
+            - type
+            - options
+          properties:
+            type:
+              type: string
+              pattern: "^dimensionInput$"
+            options:
+              type: object
+              required:
+                - min
+                - max
+              properties:
+                min:
+                  type: integer
+                  format: int64
+                  description: minimum value for slider
+                max:
+                  type: integer
+                  format: int64
+                  description: maximum value for slider
+                step:
+                  type: number
+                  format: double
+                  default: 1.00
+                  description: steps in the slider inbetween the ranges, should fit in the specified range
+                precision:
+                  type: integer
+                  format: int64
+                  description: number of significant digits to record in the result, if null or not present no precision considerations will be made
+                  default: null
+                  nullable: true
+      example:
+        type: numInput
+        options:
+          min: 0
+          max: 5
+          step: 1
+          precision: 1
+    SliderInputLabel:
+      type: object
+      required:
+        - primary
+        - secondary
+        - gradientColor
+        - primaryIcon
+      properties:
+        primary:
+          type: string
+          description: primary label, usually shown on the top
+          nullable: true
+        secondary:
+          type: string
+          description: secondary label, usually shown on the bottom
+          nullable: true
+        gradientColor:
+          type: string
+          format: hex color
+          pattern: "^#[0-9A-Za-z]{6}$"
+          description: hex color of the gradient
+          nullable: true
+        primaryIcon:
+          type: string
+          format: url
+          description: icon url for primary label
+      example:
+        primary: "10"
+        secondary: "Most pain"
+        gradientColor: "#ff0000"
+        primaryIcon: "https://your.domain.com/path/to/icon.svg"
+    NumericRangedSliderInput:
+      description: |
+        Slider showing a computed list of numerically ranged values, according the `min`, `max`, `step`, and `precision`.
+        Labels are shown at three points, min value, mid way, and the max value.
+        If `step` is `null` or not present, assumed value of 1.
+        If `precision` is `null` or not present, no precision considerations will be made.
+        Values are arranged in descending order when `order: -1`, and ascending when `order: 1`.
+        The example below will produce a dropdown of values from 5-1 descending with single-digit precision.
+      allOf:
+        - $ref: '#/components/schemas/QuestionInput'
+        - type: object
+          required:
+            - type
+            - options
+          properties:
+            type:
+              type: string
+              pattern: "^rangeSlider$"
+            options:
+              type: object
+              required:
+                - min
+                - max
+                - labels
+              properties:
+                min:
+                  type: integer
+                  format: int64
+                  description: minimum value for slider
+                max:
+                  type: integer
+                  format: int64
+                  description: maximum value for slider
+                step:
+                  type: number
+                  format: double
+                  default: 1.00
+                  description: steps in the slider inbetween the ranges, should fit in the specified range
+                precision:
+                  type: integer
+                  format: int64
+                  description: number of significant digits to record in the result, if null or not present no precision considerations will be made
+                  default: null
+                  nullable: true
+                order:
+                  type: integer
+                  format: int32
+                  enum: [-1, 1]
+                  description: sets ascending or decending from left to right with values of 1 and -1 respectively
+                labels:
+                  type: object
+                  required:
+                    - min
+                    - half
+                    - max
+                  properties:
+                    min:
+                      $ref: '#/components/schemas/SliderInputLabel'
+                    half:
+                      $ref: '#/components/schemas/SliderInputLabel'
+                    max:
+                      $ref: '#/components/schemas/SliderInputLabel'
+      example:
+        type: rangeSlider
+        options:
+          min: 0
+          max: 10
+          step: 1
+          precision: 1
+          order: -1
+          labels:
+            min:
+              primary: "1"
+              secondary: "Least pain"
+              gradientColor: "#00FF00"
+              primaryIcon: "https://your.domain.com/path/to/icon.svg"
+            half: null
+            max:
+              primary: "10"
+              secondary: "Most pain"
+              gradientColor: "#ff0000"
+              primaryIcon: "https://your.domain.com/path/to/icon.svg"
