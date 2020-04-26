@@ -63,6 +63,7 @@ components:
               type: string
               format: url
               description: url to provider profile picture
+              nullable: true
         sections:
           type: array
           items:
