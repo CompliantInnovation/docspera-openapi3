@@ -301,7 +301,7 @@ components:
         - status
         - created_at
         - last_event
-        - provider
+        - branding
         - sections
       properties:
         id:
@@ -322,21 +322,25 @@ components:
           type: string
           format: 'date-time'
           description: timestamp of last event, i.e. last time patient opened survey
-        provider:
+        branding:
           type: object
-          nullable: true
           required:
-            - name
-            - picture
+            - logo
+            - logoCaption
+            - bannerTitle
           properties:
-            name:
-              type: string
-              description: provider name
-            picture:
+            logo:
               type: string
               format: url
               description: url to provider profile picture
               nullable: true
+            logoCaption:
+              type: string
+              nullable: true
+              description: text to be displayed under the logo
+            bannerTitle:
+              type: string
+              description: provider name
         sections:
           type: array
           items:
