@@ -12,8 +12,10 @@ info:
   license:
     name: Proprietary
 tags:
-  - name: patient
-    description: patient survey apis, available via secured links
+  - name: surveyapi
+    x-display: Survey Frontend APIs
+    description: |
+      patient survey apis, available via secured links
 paths:
   /survey/{surveyId}/questions:
     get:
