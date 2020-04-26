@@ -13,7 +13,7 @@ info:
     name: Proprietary
 tags:
   - name: surveyapi
-    x-display: "Survey Frontend APIs"
+    x-displayName: "Survey Frontend APIs"
     description: |
       patient survey apis, available via secured links
 paths:
