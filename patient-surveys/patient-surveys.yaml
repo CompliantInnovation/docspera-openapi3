@@ -192,7 +192,7 @@ paths:
       summary: Save a question response
       description: |
         saves question response for a survey
-      operationId: saveSurveyResponses
+      operationId: saveSurveyResponse
       requestBody:
         content:
           application/json:
@@ -543,7 +543,6 @@ components:
                   type: integer
                   format: int64
                   description: number of significant digits to record in the result, if null or not present no precision considerations will be made
-                  default: null
                   nullable: true
                 order:
                   type: integer
@@ -731,7 +730,6 @@ components:
                   type: integer
                   format: int64
                   description: number of significant digits to record in the result, if null or not present no precision considerations will be made
-                  default: null
                   nullable: true
       example:
         type: numInput
@@ -781,7 +779,6 @@ components:
                   type: integer
                   format: int64
                   description: number of significant digits to record in the result, if null or not present no precision considerations will be made
-                  default: null
                   nullable: true
       example:
         type: numInput
@@ -863,7 +860,6 @@ components:
                   type: integer
                   format: int64
                   description: number of significant digits to record in the result, if null or not present no precision considerations will be made
-                  default: null
                   nullable: true
                 order:
                   type: integer
