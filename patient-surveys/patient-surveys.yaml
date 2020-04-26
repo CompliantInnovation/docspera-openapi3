@@ -13,14 +13,14 @@ info:
     name: Proprietary
 tags:
   - name: surveyapi
-    x-display: Survey Frontend APIs
+    x-display: "Survey Frontend APIs"
     description: |
       patient survey apis, available via secured links
 paths:
   /survey/{surveyId}/questions:
     get:
       tags:
-        - patient
+        - surveyapi
       summary: gets the survey and questions
       operationId: getSurvey
       parameters:
