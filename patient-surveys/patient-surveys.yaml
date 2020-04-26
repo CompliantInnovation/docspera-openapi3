@@ -1,0 +1,307 @@
+openapi: 3.0.0
+# Added by API Auto Mocking Plugin
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/DocSpera/patient-survey-api/1.0.0
+info:
+  description: This is a simple API
+  version: "1.0.0"
+  title: Simple Inventory API
+  contact:
+    email: you@your-company.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: admins
+    description: Secured Admin-only calls
+  - name: developers
+    description: Operations available to regular developers
+paths:
+  /inventory:
+    get:
+      tags:
+        - developers
+      summary: searches inventory
+      operationId: searchInventory
+      description: |
+        By passing in the appropriate options, you can search for
+        available inventory in the system
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for looking up inventory
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+      responses:
+        '200':
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+components:
+  schemas:
+    Question:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [enumDropdown, rangeDropdown, enumRadio, enumRadioMultipleChoice, numInput, dimInput, rangeSlider]
+          description: question type. defined in the question type spec
+        options:
+          type: object
+          additionalProperties: true
+    EnumeratedDropdown:
+      allOf:
+        - $ref: '#/components/schemas/Question'
+        - type: object
+          required:
+            - type
+            - options
+          properties:
+            type:
+              type: string
+              pattern: "^enumDropdown$"
+            options:
+              type: object
+              required:
+                - enums
+              properties:
+                enums:
+                  type: array
+                  description: array of enumerated option properties
+                  items:
+                    type: object
+                    required:
+                      - display
+                      - value
+                      - order
+                    properties:
+                      display:
+                        type: string
+                        description: value to show in the dropdown to the user
+                      value:
+                        description: value to be recorded when option is selected, any type is applicable
+                      order:
+                        type: integer
+                        format: int64
+                        description: order relative to siblings, lower value is higher priority (including negatives)
+                      isDefault:
+                        type: boolean
+                        default: false
+                        description: whether the option is considered the default option
+                    example:
+                      display: Yes
+                      value: true
+                      order: 0
+                      isDefault: true
+          example:
+            type: enumDropdown
+            options:
+              enumns:
+                - display: ''
+                  value: -1
+                  order: 0
+                  isDefault: true
+                - display: 'Yes'
+                  value: true
+                  order: 1
+                  isDefault: false
+                - display: 'No'
+                  value: false
+                  order: 2
+                  isDefault: false
+    RangedValueDropdown:
+      allOf:
+        - $ref: '#/components/schemas/Question'
+        - type: object
+          required:
+            - type
+            - options
+          properties:
+            type:
+              type: string
+              pattern: "^rangeDropdown$"
+            options:
+              type: object
+              required:
+                - min
+                - max
+              properties:
+                min:
+                  type: integer
+                  format: int64
+                  description: minimum value for slider
+                max:
+                  type: integer
+                  format: int64
+                  description: maximum value for slider
+                step:
+                  type: number
+                  format: double
+                  default: 1.00
+                  description: steps in the slider inbetween the ranges, should fit in the specified range
+                precision:
+                  type: integer
+                  format: int64
+                  description: number of significant digits to record in the result, if null or not present no precision considerations will be made
+                  default: null
+                  nullable: true
+                order:
+                  type: integer
+                  format: int32
+                  enum: [-1, 1]
+                  description: sets ascending or decending from left to right with values of 1 and -1 respectively
+          example:
+            type: rangeDropdown
+            options:
+              min: 0
+              max: 5
+              step: 1
+              precision: 1
+              order: -1
+    EnumeratedRadioSelect:
+      allOf:
+        - $ref: '#/components/schemas/Question'
+        - type: object
+          required:
+            - type
+            - options
+          properties:
+            type:
+              type: string
+              pattern: "^enumRadio$"
+            options:
+              type: object
+              required:
+                - enums
+              properties:
+                enums:
+                  type: array
+                  description: array of enumerated option properties
+                  items:
+                    type: object
+                    required:
+                      - display
+                      - value
+                      - order
+                    properties:
+                      display:
+                        type: string
+                        description: value to show in the dropdown to the user
+                      value:
+                        description: value to be recorded when option is selected, any type is applicable
+                      order:
+                        type: integer
+                        format: int64
+                        description: order relative to siblings, lower value is higher priority (including negatives)
+                      isDefault:
+                        type: boolean
+                        default: false
+                        description: whether the option is considered the default option
+                    example:
+                      display: Yes
+                      value: true
+                      order: 0
+                      isDefault: true
+          example:
+            type: enumDropdown
+            options:
+              enumns:
+                - display: ''
+                  value: -1
+                  order: 0
+                  isDefault: true
+                - display: 'Yes'
+                  value: true
+                  order: 1
+                  isDefault: false
+                - display: 'No'
+                  value: false
+                  order: 2
+                  isDefault: false
+    EnumeratedMultipleChoiceRadioSelect:
+      allOf:
+        - $ref: '#/components/schemas/Question'
+        - type: object
+          required:
+            - type
+            - options
+          properties:
+            type:
+              type: string
+              pattern: "^enumRadioMultipleChoice$"
+            options:
+              type: object
+              required:
+                - enums
+              properties:
+                orientation:
+                  type: integer
+                  enum: [-1, 1]
+                  format: int32
+                  default: 1
+                enums:
+                  type: array
+                  description: array of enumerated option properties
+                  items:
+                    type: object
+                    required:
+                      - display
+                      - value
+                      - order
+                    properties:
+                      display:
+                        type: string
+                        description: value to show in the dropdown to the user
+                      value:
+                        description: value to be recorded when option is selected, any type is applicable
+                      order:
+                        type: integer
+                        format: int64
+                        description: order relative to siblings, lower value is higher priority (including negatives)
+                      isDefault:
+                        type: boolean
+                        default: false
+                        description: whether the option is considered the default option
+                    example:
+                      display: Yes
+                      value: true
+                      order: 0
+                      isDefault: true
+          example:
+            type: enumRadioMultipleChoice
+            options:
+              orientation: 1
+              enumns:
+                - display: ''
+                  value: -1
+                  order: 0
+                  isDefault: true
+                - display: 'Yes'
+                  value: true
+                  order: 1
+                  isDefault: false
+                - display: 'No'
+                  value: false
+                  order: 2
+                  isDefault: false
