@@ -7,6 +7,10 @@ info:
   description: APIs to serve patient surveys
   version: "2.0.0-alpha1"
   title: Patient Survey APIs
+  x-logo:
+    url: https://docspera.com/assets/D3/pic/Logo-Full-White-Padded.png
+    backgroundColor: "#0096FA"
+    href: https://docspera.com
   contact:
     email: luca@docspera.com
   license:
@@ -18,19 +22,19 @@ tags:
       patient survey apis, available via secured links
 paths:
   /survey/{surveyId}/questions:
+    parameters:
+      - in: path
+        name: surveyId
+        description: survey uuid
+        required: true
+        schema:
+          type: string
+          format: uuid
     get:
       tags:
         - surveyapi
-      summary: gets the survey and questions
+      summary: Get survey questions
       operationId: getSurvey
-      parameters:
-        - in: path
-          name: surveyId
-          description: survey uuid
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         '200':
           description: survey response
@@ -38,12 +42,265 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Survey'
+        '400':
+          description: bad request, survey already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: bad_request
+                description: survey already completed
+        '404':
+          description: survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                description: survey not found
+  /survey/{surveyId}/responses:
+    parameters:
+      - in: path
+        name: surveyId
+        description: survey uuid
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - surveyapi
+      summary: Get survey responses
+      description: |
+        gets current survey response questions, if the survey is not already completed
+      operationId: getSurveyResponses
+      responses:
+        '200':
+          description: survey response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionResponse'
+        '400':
+          description: bad request, survey already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: bad_request
+                description: survey already completed
+        '404':
+          description: survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                description: survey not found
+    put:
+      tags:
+        - surveyapi
+      summary: Save survey responses
+      description: |
+        saves all of the current survey response questions
+      operationId: saveSurveyResponses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuestionResponse'
+      responses:
+        '200':
+          description: responses saved
+        '400':
+          description: bad request, survey already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: bad_request
+                description: survey already completed
+        '404':
+          description: survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                description: survey not found
+  /survey/{surveyId}/responses/{questionId}:
+    parameters:
+      - in: path
+        name: surveyId
+        description: survey uuid
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: questionId
+        description: question uuid, belonging to the survey
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - surveyapi
+      summary: Get a question response
+      description: |
+        gets the current response for a particular question in a survey, if the survey is not already completed
+      operationId: getSurveyResponse
+      responses:
+        '200':
+          description: survey response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionResponse'
+        '400':
+          description: bad request, survey already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: bad_request
+                description: survey already completed
+        '404':
+          description: survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                description: survey not found
+    put:
+      tags:
+        - surveyapi
+      summary: Save a question response
+      description: |
+        saves question response for a survey
+      operationId: saveSurveyResponses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionResponse'
+      responses:
+        '200':
+          description: responses saved
+        '400':
+          description: bad request, survey already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: bad_request
+                description: survey already completed
+        '404':
+          description: survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                description: survey not found
+  /survey/{surveyId}/status:
+    parameters:
+      - in: path
+        name: surveyId
+        description: survey uuid
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags:
+        - surveyapi
+      summary: Complete survey
+      operationId: completeSurvey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: integer
+                  format: int32
+                  enum: [2]
+                  description: status for survey completed
+      responses:
+        '200':
+          description: survey successfully completed
+        '400':
+          description: bad request, survey already completed or invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: bad_request
+                description: survey already completed
+        '404':
+          description: survey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: not_found
+                description: survey not found
 components:
   schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - description
+      properties:
+        error:
+          type: string
+          description: error type
+        description:
+          type: string
+          description: error_message
+    QuestionResponse:
+      type: object
+      required:
+        - id
+        - value
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: question uuid
+        value:
+          description: current value of the question response, can by any type depending on the question
+          nullable: true
     Survey:
       type: object
       required:
         - id
+        - status
+        - created_at
+        - last_event
         - provider
         - sections
       properties:
@@ -51,6 +308,20 @@ components:
           type: string
           format: uuid
           description: survey uuid, also present in the request url
+        status:
+          type: integer
+          enum: [0,1,2]
+          description: |
+            `0` undefined, `1` not yet submitted, `2` submitted
+        created_at:
+          type: string
+          format: 'date-time'
+          description: timestamp of creation
+        last_event:
+          nullable: true
+          type: string
+          format: 'date-time'
+          description: timestamp of last event, i.e. last time patient opened survey
         provider:
           type: object
           nullable: true
@@ -166,7 +437,6 @@ components:
           description: question type. defined in the question type spec
         options:
           type: object
-          additionalProperties: true
     EnumeratedDropdown:
       description: |
         Dropdown showing an enumerated list of options with corresponding `display => value` relationships.
@@ -333,8 +603,8 @@ components:
                         type: boolean
                         default: false
                         description: whether the option is considered the default option
-                    example:
-                      display: Yes
+                  example:
+                    - display: Yes
                       value: true
                       order: 0
                       isDefault: true
