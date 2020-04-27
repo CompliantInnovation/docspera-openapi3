@@ -21,7 +21,7 @@ tags:
     description: |
       patient survey apis, available via secured links
 paths:
-  /survey/{surveyId}/questions:
+  /survey/{surveyId}:
     parameters:
       - in: path
         name: surveyId
@@ -33,7 +33,7 @@ paths:
     get:
       tags:
         - surveyapi
-      summary: Get survey questions
+      summary: Get survey and questions
       operationId: getSurvey
       responses:
         '200':
