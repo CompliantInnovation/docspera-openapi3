@@ -20,8 +20,12 @@ tags:
     x-displayName: "Survey Frontend APIs"
     description: |
       patient survey apis, available via secured links
+  - name: surveyadmin
+    x-displayName: "Survey Creation APIs"
+    description: |
+      apis for use in creating surveys, dashboard serving
 paths:
-  /survey/{surveyId}:
+  /api/v1/surveys/{surveyId}:
     parameters:
       - in: path
         name: surveyId
@@ -60,7 +64,7 @@ paths:
               example:
                 error: not_found
                 description: survey not found
-  /survey/{surveyId}/responses:
+  /api/v1/surveys/{surveyId}/responses:
     parameters:
       - in: path
         name: surveyId
@@ -138,7 +142,7 @@ paths:
               example:
                 error: not_found
                 description: survey not found
-  /survey/{surveyId}/responses/{questionId}:
+  /api/v1/surveys/{surveyId}/responses/{questionId}:
     parameters:
       - in: path
         name: surveyId
@@ -219,7 +223,7 @@ paths:
               example:
                 error: not_found
                 description: survey not found
-  /survey/{surveyId}/status:
+  /api/v1/surveys/{surveyId}/status:
     parameters:
       - in: path
         name: surveyId
@@ -267,7 +271,124 @@ paths:
               example:
                 error: not_found
                 description: survey not found
+
+  /api/v1/admin/templates:
+    get:
+      tags:
+        - surveyadmin
+      parameters:
+        - name: pageSize
+          in: query
+          description: pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: page
+          in: query
+          description: pagination page
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+          required: false
+        - name: practiceId
+          in: query
+          description: practice id to filter surveys by
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: userId
+          in: query
+          description: user id belonging to the practice to filter results by
+          schema:
+            type: integer
+            format: int64
+            description: ae2 encoded user id
+          required: false
+        - name: includeGlobal
+          in: query
+          description: include global templates provided by docspera in the results
+          schema:
+            type: boolean
+            nullable: false
+            default: true
+          required: false
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: list of survey
+  /api/v1/admin/surveys:
+    get:
+      tags:
+        - surveyadmin
+      parameters:
+        - name: pageSize
+          in: query
+          description: pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: page
+          in: query
+          description: pagination page
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+          required: false
+        - name: practiceId
+          in: query
+          description: practice id to filter surveys by
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: userId
+          in: query
+          description: user id belonging to the practice to filter results by
+          schema:
+            type: integer
+            format: int64
+            description: ae2 encoded user id
+          required: false
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: list of surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                description: array of surveys
+                items:
+                  type: object
 components:
+  securitySchemes:
+    signedCookie:
+      type: apiKey
+      in: cookie
+      name: docsperajwt
+      description: docspera signed jwt cookie
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     ErrorResponse:
       type: object
@@ -294,6 +415,59 @@ components:
         value:
           description: current value of the question response, can by any type depending on the question
           nullable: true
+    SurveyTemplate:
+      type: object
+      required:
+        - id
+        - createdAt
+        - lastEvent
+        - global
+        - practiceId
+        - userId
+        - branding
+        - sections
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: survey uuid, also present in the request url
+        status:
+          type: integer
+          enum: [0,1,2]
+          description: |
+            `0` undefined, `1` not yet submitted, `2` submitted
+        created_at:
+          type: string
+          format: 'date-time'
+          description: timestamp of creation
+        last_event:
+          nullable: true
+          type: string
+          format: 'date-time'
+          description: timestamp of last event, i.e. last time patient opened survey
+        branding:
+          type: object
+          required:
+            - logo
+            - logoCaption
+            - bannerTitle
+          properties:
+            logo:
+              type: string
+              format: url
+              description: url to provider profile picture
+              nullable: true
+            logoCaption:
+              type: string
+              nullable: true
+              description: text to be displayed under the logo
+            bannerTitle:
+              type: string
+              description: provider name
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Section'
     Survey:
       type: object
       required:
