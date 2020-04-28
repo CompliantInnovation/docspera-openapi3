@@ -271,11 +271,12 @@ paths:
               example:
                 error: not_found
                 description: survey not found
-
   /api/v1/admin/templates:
     get:
       tags:
         - surveyadmin
+      summary: Get survey templates
+      operationId: getSurveyTemplates
       parameters:
         - name: pageSize
           in: query
@@ -324,7 +325,114 @@ paths:
         - jwt: []
       responses:
         '200':
-          description: list of survey
+          description: list of survey templates
+          content:
+            application/json:
+              schema:
+                type: array
+                description: array of survey templates
+                items:
+                  $ref: '#/components/schemas/SurveyTemplate'
+  /api/v1/admin/templates/{templateId}:
+    get:
+      tags:
+        - surveyadmin
+      summary: Get a survey template
+      operationId: getSurveyTemplate
+      parameters:
+        - in: path
+          name: templateId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: survey template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyTemplate'
+  /api/v1/admin/templates/{templateId}/sections:
+    get:
+      tags:
+        - surveyadmin
+      summary: Get a survey template's sections
+      operationId: getSurveyTemplateSections
+      parameters:
+        - in: path
+          name: templateId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: survey template sections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Section'
+  /api/v1/admin/surveygroups:
+    get:
+      tags:
+        - surveyadmin
+      parameters:
+        - name: pageSize
+          in: query
+          description: pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: page
+          in: query
+          description: pagination page
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+          required: false
+        - name: practiceId
+          in: query
+          description: practice id to filter surveys by
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: userId
+          in: query
+          description: user id belonging to the practice to filter results by
+          schema:
+            type: integer
+            format: int64
+            description: ae2 encoded user id
+          required: false
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: list of surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                description: array of surveys
+                items:
+                  type: object
   /api/v1/admin/surveys:
     get:
       tags:
@@ -420,61 +528,60 @@ components:
       required:
         - id
         - createdAt
-        - lastEvent
         - global
         - practiceId
         - userId
         - branding
-        - sections
       properties:
         id:
           type: string
           format: uuid
           description: survey uuid, also present in the request url
-        status:
-          type: integer
-          enum: [0,1,2]
-          description: |
-            `0` undefined, `1` not yet submitted, `2` submitted
-        created_at:
+        createdAt:
           type: string
           format: 'date-time'
           description: timestamp of creation
-        last_event:
+        global:
+          type: boolean
+          description: if the template is global to all users of docspera
+        practiceId:
+          type: integer
+          format: int64
+          description: practice id that the template belongs to
           nullable: true
-          type: string
-          format: 'date-time'
-          description: timestamp of last event, i.e. last time patient opened survey
+        userId:
+          type: integer
+          format: int64
+          description: user id that the template belongs to
+          nullable: true
         branding:
-          type: object
-          required:
-            - logo
-            - logoCaption
-            - bannerTitle
-          properties:
-            logo:
-              type: string
-              format: url
-              description: url to provider profile picture
-              nullable: true
-            logoCaption:
-              type: string
-              nullable: true
-              description: text to be displayed under the logo
-            bannerTitle:
-              type: string
-              description: provider name
-        sections:
-          type: array
-          items:
-            $ref: '#/components/schemas/Section'
+          $ref: '#/components/schemas/SurveyBranding'
+    SurveyBranding:
+      type: object
+      required:
+        - logo
+        - logoCaption
+        - bannerTitle
+      properties:
+        logo:
+          type: string
+          format: url
+          description: url to provider profile picture
+          nullable: true
+        logoCaption:
+          type: string
+          nullable: true
+          description: text to be displayed under the logo
+        bannerTitle:
+          type: string
+          description: provider name
     Survey:
       type: object
       required:
         - id
         - status
-        - created_at
-        - last_event
+        - createdAt
+        - lastEvent
         - branding
         - sections
       properties:
@@ -487,34 +594,17 @@ components:
           enum: [0,1,2]
           description: |
             `0` undefined, `1` not yet submitted, `2` submitted
-        created_at:
+        createdAt:
           type: string
           format: 'date-time'
           description: timestamp of creation
-        last_event:
+        lastEvent:
           nullable: true
           type: string
           format: 'date-time'
           description: timestamp of last event, i.e. last time patient opened survey
         branding:
-          type: object
-          required:
-            - logo
-            - logoCaption
-            - bannerTitle
-          properties:
-            logo:
-              type: string
-              format: url
-              description: url to provider profile picture
-              nullable: true
-            logoCaption:
-              type: string
-              nullable: true
-              description: text to be displayed under the logo
-            bannerTitle:
-              type: string
-              description: provider name
+          $ref: '#/components/schemas/SurveyBranding'
         sections:
           type: array
           items:
