@@ -382,6 +382,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Section'
   /api/v1/admin/surveygroups:
+    description: get survey groups
     get:
       tags:
         - surveyadmin
@@ -433,8 +434,9 @@ paths:
                 description: array of survey groups
                 items:
                   $ref: '#/components/schemas/SurveyGroup'
-  /api/v1/admin/surveygroups/{groupId}/destinations:
+  /api/v1/admin/surveygroups/{groupId}:
     get:
+      description: get a survey group
       tags:
         - surveyadmin
       parameters:
@@ -492,7 +494,68 @@ paths:
                 description: array of survey groups
                 items:
                   $ref: '#/components/schemas/SurveyGroup'
-  /api/v1/admin/surveys:
+  /api/v1/admin/surveygroups/{groupId}/recipients:
+    get:
+      tags:
+        - surveyadmin
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: survey group id
+          schema:
+            type: string
+            format: uuid
+        - name: pageSize
+          in: query
+          description: pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: page
+          in: query
+          description: pagination page
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+          required: false
+        - name: practiceId
+          in: query
+          description: practice id to filter surveys by
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: userId
+          in: query
+          description: user id belonging to the practice to filter results by
+          schema:
+            type: integer
+            format: int64
+            description: ae2 encoded user id
+          required: false
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: list of survey group recipients
+          content:
+            application/json:
+              schema:
+                type: array
+                description: array of survey groups
+                items:
+                  $ref: '#/components/schemas/SurveyRecipient'
+  /api/v1/admin/surveygroups/{groupId}/responses:
+    description: get survey group responses
+  /api/v1/admin/surveyresponses:
     get:
       tags:
         - surveyadmin
@@ -679,7 +742,11 @@ components:
               - templateMappings
             properties:
               destinationType:
-                $ref: '#/components/schemas/SurveyDestination'
+                type: string
+                description: survey destination type
+                enum:
+                  - "email"
+                  - "sms"
               template:
                 type: string
                 description: survey template, tbd
@@ -735,18 +802,22 @@ components:
         destinations:
           type: array
           items:
-            $ref: '#/components/schemas/SurveyDestination'
-    SurveyDestination:
+            $ref: '#/components/schemas/SurveyRecipientDestination'
+    SurveyRecipientDestination:
       type: object
       required:
         - type
         - destination
-    SurveyDesinationType:
-      type: string
-      description: survey destination type
-      enum:
-        - "email"
-        - "sms"
+      properties:
+        type:
+          type: string
+          description: survey destination type
+          enum:
+            - "email"
+            - "sms"
+        destination:
+          type: string
+          description: suvey destination value
     SurveyGroupEvent:
       type: object
     Survey:
@@ -762,7 +833,7 @@ components:
         id:
           type: string
           format: uuid
-          description: survey uuid, also present in the request url
+          description: survey recipient uuid, also present in the request url
         status:
           type: integer
           enum: [0,1,2]
