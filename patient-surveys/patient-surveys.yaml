@@ -425,14 +425,73 @@ paths:
         - jwt: []
       responses:
         '200':
-          description: list of surveys
+          description: list of survey groups
           content:
             application/json:
               schema:
                 type: array
-                description: array of surveys
+                description: array of survey groups
                 items:
-                  type: object
+                  $ref: '#/components/schemas/SurveyGroup'
+  /api/v1/admin/surveygroups/{groupId}/destinations:
+    get:
+      tags:
+        - surveyadmin
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: survey group id
+          schema:
+            type: string
+            format: uuid
+        - name: pageSize
+          in: query
+          description: pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: page
+          in: query
+          description: pagination page
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+          required: false
+        - name: practiceId
+          in: query
+          description: practice id to filter surveys by
+          schema:
+            type: integer
+            format: int64
+          required: true
+        - name: userId
+          in: query
+          description: user id belonging to the practice to filter results by
+          schema:
+            type: integer
+            format: int64
+            description: ae2 encoded user id
+          required: false
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: list of survey groups
+          content:
+            application/json:
+              schema:
+                type: array
+                description: array of survey groups
+                items:
+                  $ref: '#/components/schemas/SurveyGroup'
   /api/v1/admin/surveys:
     get:
       tags:
@@ -575,6 +634,121 @@ components:
         bannerTitle:
           type: string
           description: provider name
+    SurveyGroup:
+      type: object
+      required:
+        - groupId
+        - status
+        - createdAt
+        - userId
+        - practiceId
+        - events
+        - surveyTemplate
+        - destinationTemplates
+      properties:
+        group_id:
+          type: string
+        status:
+          type: integer
+        createdAt:
+          type: string
+          format: 'date-time'
+          description: timestamp of creation
+        surveyTemplate:
+          $ref: '#/components/schemas/SurveyTemplate'
+        practiceId:
+          type: integer
+          format: int64
+          description: practice id that the template belongs to
+          nullable: true
+        userId:
+          type: integer
+          format: int64
+          description: user id that the template belongs to
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SurveyGroupEvent'
+        destinationTemplates:
+          type: array
+          items:
+            type: object
+            required:
+              - destinationType
+              - template
+              - templateMappings
+            properties:
+              destinationType:
+                $ref: '#/components/schemas/SurveyDestination'
+              template:
+                type: string
+                description: survey template, tbd
+              templateMappings:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - field
+                    - mapping
+                  properties:
+                    field:
+                      type: string
+                      description: field in template, tbd
+                    mapping:
+                      type: string
+                      enum:
+                        - patientName
+                        - caseDate
+                        - providerName
+    SurveyRecipient:
+      type: object
+      required:
+        - id
+        - patientId
+        - calendarId
+        - name
+        - mrn
+        - destinations
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: recipient uuid
+        patientId:
+          type: integer
+          format: int64
+          description: docspera patient id, if available
+          nullable: true
+        calendarId:
+          type: integer
+          format: int64
+          description: docspera calendar id, if available
+          nullable: true
+        name:
+          type: string
+          description: recipient name
+          nullable: true
+        mrn:
+          type: string
+          description: mrn to be displayed for tracking, if available
+          nullable: true
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SurveyDestination'
+    SurveyDestination:
+      type: object
+      required:
+        - type
+        - destination
+    SurveyDesinationType:
+      type: string
+      description: survey destination type
+      enum:
+        - "email"
+        - "sms"
+    SurveyGroupEvent:
+      type: object
     Survey:
       type: object
       required:
