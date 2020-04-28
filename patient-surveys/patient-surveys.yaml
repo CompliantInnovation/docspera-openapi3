@@ -382,8 +382,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/Section'
   /api/v1/admin/surveygroups:
-    description: get survey groups
     get:
+      summary: Get survey groups
+      description: get survey groups
+      operationId: getSurveyGroups
       tags:
         - surveyadmin
       parameters:
@@ -436,7 +438,9 @@ paths:
                   $ref: '#/components/schemas/SurveyGroup'
   /api/v1/admin/surveygroups/{groupId}:
     get:
+      summary: Get a survey group
       description: get a survey group
+      operationId: getSurveyGroup
       tags:
         - surveyadmin
       parameters:
@@ -447,40 +451,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: pageSize
-          in: query
-          description: pagination per page limit
-          schema:
-            type: integer
-            format: int64
-            minimum: 0
-            maximum: 100
-            default: 50
-          required: false
-        - name: page
-          in: query
-          description: pagination page
-          schema:
-            type: integer
-            format: int64
-            minimum: 1
-            default: 1
-          required: false
-        - name: practiceId
-          in: query
-          description: practice id to filter surveys by
-          schema:
-            type: integer
-            format: int64
-          required: true
-        - name: userId
-          in: query
-          description: user id belonging to the practice to filter results by
-          schema:
-            type: integer
-            format: int64
-            description: ae2 encoded user id
-          required: false
       security:
         - signedCookie: []
         - jwt: []
@@ -496,6 +466,9 @@ paths:
                   $ref: '#/components/schemas/SurveyGroup'
   /api/v1/admin/surveygroups/{groupId}/recipients:
     get:
+      summary: Get survey group recipients
+      description: get survey group recipients
+      operationId: getSurveyGroupRecipients
       tags:
         - surveyadmin
       parameters:
@@ -525,21 +498,6 @@ paths:
             minimum: 1
             default: 1
           required: false
-        - name: practiceId
-          in: query
-          description: practice id to filter surveys by
-          schema:
-            type: integer
-            format: int64
-          required: true
-        - name: userId
-          in: query
-          description: user id belonging to the practice to filter results by
-          schema:
-            type: integer
-            format: int64
-            description: ae2 encoded user id
-          required: false
       security:
         - signedCookie: []
         - jwt: []
@@ -554,9 +512,57 @@ paths:
                 items:
                   $ref: '#/components/schemas/SurveyRecipient'
   /api/v1/admin/surveygroups/{groupId}/responses:
-    description: get survey group responses
+    get:
+      summary: Get survey group responses
+      description: get survey group responses
+      operationId: getSurveyGroupResponses
+      tags:
+        - surveyadmin
+      parameters:
+        - name: pageSize
+          in: query
+          description: pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: page
+          in: query
+          description: pagination page
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            default: 1
+          required: false
+        - name: groupId
+          in: path
+          required: true
+          description: survey group id
+          schema:
+            type: string
+            format: uuid
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: list of surveys
+          content:
+            application/json:
+              schema:
+                type: array
+                description: array of surveys
+                items:
+                  type: object
   /api/v1/admin/surveyresponses:
     get:
+      summary: Get all survey responses
+      description: Get all survey responses
+      operationId: getAllRecipientSurveyResponses
       tags:
         - surveyadmin
       parameters:
@@ -594,6 +600,13 @@ paths:
             format: int64
             description: ae2 encoded user id
           required: false
+        - name: groupId
+          in: query
+          required: false
+          description: survey group id
+          schema:
+            type: string
+            format: uuid
       security:
         - signedCookie: []
         - jwt: []
@@ -908,6 +921,7 @@ components:
         - id
         - slug
         - prompt
+        - required
         - input
       properties:
         id:
@@ -920,6 +934,10 @@ components:
         prompt:
           type: string
           description: prompt that the patient is presented with
+        required:
+          type: boolean
+          default: false
+          description: whether the question must be answered by the user or not
         input:
           oneOf:
             - $ref: '#/components/schemas/EnumeratedDropdown'
