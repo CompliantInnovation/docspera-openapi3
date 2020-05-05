@@ -278,9 +278,9 @@ paths:
       summary: Get survey templates
       operationId: getSurveyTemplates
       parameters:
-        - name: pageSize
+        - name: limit
           in: query
-          description: pagination per page limit
+          description: cursor pagination per page limit
           schema:
             type: integer
             format: int64
@@ -288,14 +288,11 @@ paths:
             maximum: 100
             default: 50
           required: false
-        - name: page
+        - name: token
           in: query
-          description: pagination page
+          description: cursor pagination token
           schema:
-            type: integer
-            format: int64
-            minimum: 1
-            default: 1
+            type: string
           required: false
         - name: practiceId
           in: query
@@ -445,9 +442,9 @@ paths:
       tags:
         - surveyadmin
       parameters:
-        - name: pageSize
+        - name: limit
           in: query
-          description: pagination per page limit
+          description: cursor pagination per page limit
           schema:
             type: integer
             format: int64
@@ -455,14 +452,11 @@ paths:
             maximum: 100
             default: 50
           required: false
-        - name: page
+        - name: token
           in: query
-          description: pagination page
+          description: cursor pagination token
           schema:
-            type: integer
-            format: int64
-            minimum: 1
-            default: 1
+            type: string
           required: false
         - name: practiceId
           in: query
@@ -528,16 +522,9 @@ paths:
       tags:
         - surveyadmin
       parameters:
-        - name: groupId
-          in: path
-          required: true
-          description: survey group id
-          schema:
-            type: string
-            format: uuid
-        - name: pageSize
+        - name: limit
           in: query
-          description: pagination per page limit
+          description: cursor pagination per page limit
           schema:
             type: integer
             format: int64
@@ -545,15 +532,19 @@ paths:
             maximum: 100
             default: 50
           required: false
-        - name: page
+        - name: token
           in: query
-          description: pagination page
+          description: cursor pagination token
           schema:
-            type: integer
-            format: int64
-            minimum: 1
-            default: 1
+            type: string
           required: false
+        - name: groupId
+          in: path
+          required: true
+          description: survey group id
+          schema:
+            type: string
+            format: uuid
       security:
         - signedCookie: []
         - jwt: []
@@ -575,9 +566,9 @@ paths:
       tags:
         - surveyadmin
       parameters:
-        - name: pageSize
+        - name: limit
           in: query
-          description: pagination per page limit
+          description: cursor pagination per page limit
           schema:
             type: integer
             format: int64
@@ -585,14 +576,11 @@ paths:
             maximum: 100
             default: 50
           required: false
-        - name: page
+        - name: token
           in: query
-          description: pagination page
+          description: cursor pagination token
           schema:
-            type: integer
-            format: int64
-            minimum: 1
-            default: 1
+            type: string
           required: false
         - name: groupId
           in: path
@@ -622,9 +610,9 @@ paths:
       tags:
         - surveyadmin
       parameters:
-        - name: pageSize
+        - name: limit
           in: query
-          description: pagination per page limit
+          description: cursor pagination per page limit
           schema:
             type: integer
             format: int64
@@ -632,14 +620,11 @@ paths:
             maximum: 100
             default: 50
           required: false
-        - name: page
+        - name: token
           in: query
-          description: pagination page
+          description: cursor pagination token
           schema:
-            type: integer
-            format: int64
-            minimum: 1
-            default: 1
+            type: string
           required: false
         - name: practiceId
           in: query
