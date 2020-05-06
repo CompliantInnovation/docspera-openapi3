@@ -345,6 +345,7 @@ paths:
               type: object
               required:
                 - global
+                - name
                 - practiceId
                 - userId
                 - branding
@@ -352,6 +353,11 @@ paths:
                 global:
                   type: boolean
                   default: false
+                name:
+                  type: string
+                  default: null
+                  nullable: true
+                  description: template name
                 practiceId:
                   type: integer
                   format: int64
