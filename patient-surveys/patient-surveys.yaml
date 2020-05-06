@@ -415,6 +415,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SurveyTemplate'
+    put:
+      tags:
+        - surveyadmin
+      summary: Get a survey template
+      operationId: getSurveyTemplate
+      parameters:
+        - in: path
+          name: templateId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - signedCookie: []
+        - jwt: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                global:
+                  type: boolean
+                  default: false
+                name:
+                  type: string
+                  default: null
+                  nullable: true
+                  description: template name
+                practiceId:
+                  type: integer
+                  format: int64
+                  nullable: true
+                  description: practice id to associate the template to
+                userId:
+                  type: integer
+                  format: int64
+                  nullable: true
+                  description: user id to associate the template to
+                branding:
+                  type: object
+                  required:
+                    - logo
+                    - logoCaption
+                    - bannerTitle
+                  propertie:
+                    logo:
+                      type: string
+                      format: uri
+                      nullable: true
+                    logoCaption:
+                      type: string
+                      nullable: true
+                    bannerTitle:
+                      type: string
+                      nullable: true
+      responses:
+        '200':
+          description: updated survey template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyTemplate'
   /api/v1/admin/templates/{templateId}/sections:
     get:
       tags:
