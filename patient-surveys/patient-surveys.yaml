@@ -705,6 +705,7 @@ components:
         - id
         - createdAt
         - global
+        - name
         - practiceId
         - userId
         - branding
@@ -720,6 +721,11 @@ components:
         global:
           type: boolean
           description: if the template is global to all users of docspera
+        name:
+          type: string
+          nullable: true
+          default: null
+          description: template name
         practiceId:
           type: integer
           format: int64
