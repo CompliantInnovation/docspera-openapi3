@@ -566,15 +566,23 @@ paths:
                 sectionId: '$response.body#/id'
                 description: |
                   The `id` value returned in the response can be used as the `sectionId` parameter
-                  in the `GET /api/v1/admin/templates/{templateId}/{sectionId}`
-            UpdateSurveyTemplate:
+                  in the `GET /api/v1/admin/templates/{templateId}/sections/{sectionId}`
+            UpdateSurveyTemplateSection:
               operationId: updateSurveyTemplateSection
               parameters:
                 templateId: '$request.path.templateId'
                 sectionId: '$response.body#/id'
                 description: |
                   The `id` value returned in the response can be used as the `sectionId` parameter
-                  in the `PUT /api/v1/admin/templates/{templateId}/{sectionId}`
+                  in the `PUT /api/v1/admin/templates/{templateId}/sections/{sectionId}`
+            DeleteSurveyTemplateSection:
+              operationId: deleteSurveyTemplateSection
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `sectionId` parameter
+                  in the `DELETE /api/v1/admin/templates/{templateId}/sections/{sectionId}`
           content:
             application/json:
               schema:
@@ -642,11 +650,19 @@ paths:
                   nullable: true
       responses:
         '200':
-          description: survey template section
+          description: survey template section updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Section'
+    delete:
+      tags:
+        - surveyadmin
+      summary: Delete a survey template section
+      operationId: deleteSurveyTemplateSection
+      responses:
+        '204':
+          description: survey template section deleted
   /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections:
     parameters:
       - in: path
@@ -701,7 +717,7 @@ paths:
                   nullable: true
       responses:
         '201':
-          description: survey template subsection
+          description: survey template subsection created
           headers:
             Location:
               schema:
@@ -709,30 +725,40 @@ paths:
                 format: uri
                 description: resource uri of the new survey template section
           links:
-            GetSurveyTemplateSection:
+            GetSurveyTemplateSectionSubsection:
               operationId: getSurveyTemplateSection
               parameters:
                 templateId: '$request.path.templateId'
-                sectionId: '$response.body#/id'
+                sectionId: '$request.path.sectionId'
+                subsectionId: '$response.body#/id'
                 description: |
-                  The `id` value returned in the response can be used as the `sectionId` parameter
-                  in the `GET /api/v1/admin/templates/{templateId}/{sectionId}`
-            UpdateSurveyTemplate:
+                  The `id` value returned in the response can be used as the `subsectionId` parameter
+                  in the `GET /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}`
+            UpdateSurveyTemplateSectionSubsection:
               operationId: updateSurveyTemplateSection
               parameters:
                 templateId: '$request.path.templateId'
-                sectionId: '$response.body#/id'
+                sectionId: '$request.path.sectionId'
+                subsectionId: '$response.body#/id'
                 description: |
-                  The `id` value returned in the response can be used as the `sectionId` parameter
-                  in the `PUT /api/v1/admin/templates/{templateId}/{sectionId}`
+                  The `id` value returned in the response can be used as the `subsectionId` parameter
+                  in the `PUT /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}`
+            DeleteSurveyTemplateSectionSubsection:
+              operationId: deleteSurveyTemplateSection
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$request.path.sectionId'
+                subsectionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `subsectionId` parameter
+                  in the `DELETE /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}`
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Section'
-
-  /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subSectionId}:
+  /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}:
     parameters:
       - in: path
         name: templateId
@@ -747,7 +773,7 @@ paths:
           type: string
           format: uuid
       - in: path
-        name: subSectionId
+        name: subsectionId
         required: true
         schema:
           type: string
@@ -802,11 +828,22 @@ paths:
                   nullable: true
       responses:
         '200':
-          description: survey template section
+          description: survey template subsection updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Section'
+                $ref: '#/components/schemas/SubSection'
+    delete:
+      tags:
+        - surveyadmin
+      summary: Delete a survey template subsection
+      operationId: deleteSurveyTemplateSectionSubsection
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '204':
+          description: survey template subsection deleted
   /api/v1/admin/surveygroups:
     get:
       summary: Get survey groups
