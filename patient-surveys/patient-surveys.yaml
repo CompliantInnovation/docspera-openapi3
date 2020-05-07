@@ -272,6 +272,9 @@ paths:
                 error: not_found
                 description: survey not found
   /api/v1/admin/templates:
+    security:
+      - signedCookie: []
+      - jwt: []
     get:
       tags:
         - surveyadmin
@@ -317,9 +320,6 @@ paths:
             nullable: false
             default: true
           required: false
-      security:
-        - signedCookie: []
-        - jwt: []
       responses:
         '200':
           description: list of survey templates
@@ -335,9 +335,6 @@ paths:
         - surveyadmin
       summary: Create survey template
       operationId: createSurveyTemplates
-      security:
-        - signedCookie: []
-        - jwt: []
       requestBody:
         content:
           application/json:
@@ -386,28 +383,49 @@ paths:
                       type: string
                       nullable: true
       responses:
-        '200':
-          description: new survey template
+        '201':
+          description: survey template created
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                description: resource uri of the new survey template
+          links:
+            GetSurveyTemplate:
+              operationId: getSurveyTemplate
+              parameters:
+                templateId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `templateId` parameter
+                  in the `GET /api/v1/admin/templates/{templateId}`
+            UpdateSurveyTemplate:
+              operationId: updateSurveyTemplate
+              parameters:
+                templateId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `templateId` parameter
+                  in the `PUT /api/v1/admin/templates/{templateId}`
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SurveyTemplate'
   /api/v1/admin/templates/{templateId}:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
     get:
       tags:
         - surveyadmin
       summary: Get a survey template
       operationId: getSurveyTemplate
-      parameters:
-        - in: path
-          name: templateId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      security:
-        - signedCookie: []
-        - jwt: []
       responses:
         '200':
           description: survey template
@@ -418,18 +436,8 @@ paths:
     put:
       tags:
         - surveyadmin
-      summary: Get a survey template
-      operationId: getSurveyTemplate
-      parameters:
-        - in: path
-          name: templateId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      security:
-        - signedCookie: []
-        - jwt: []
+      summary: Update a survey template
+      operationId: updateSurveyTemplate
       requestBody:
         content:
           application/json:
@@ -473,27 +481,35 @@ paths:
                       nullable: true
       responses:
         '200':
-          description: updated survey template
+          description: survey template updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SurveyTemplate'
+    delete:
+      tags:
+        - surveyadmin
+      summary: Delete a survey template
+      operationId: deleteSurveyTemplate
+      responses:
+        '204':
+          description: survey template deleted
   /api/v1/admin/templates/{templateId}/sections:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
     get:
       tags:
         - surveyadmin
       summary: Get a survey template's sections
       operationId: getSurveyTemplateSections
-      parameters:
-        - in: path
-          name: templateId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      security:
-        - signedCookie: []
-        - jwt: []
       responses:
         '200':
           description: survey template sections
@@ -503,6 +519,294 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Section'
+    post:
+      tags:
+        - surveyadmin
+      summary: Create a section in a survey template
+      operationId: createSurveyTemplateSection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              requried:
+                - order
+                - title
+                - subtext
+                - icon
+              properties:
+                order:
+                  type: integer
+                  format: int64
+                  default: 0
+                title:
+                  type: string
+                  nullable: true
+                subtext:
+                  type: string
+                  nullable: true
+                icon:
+                  type: string
+                  format: uri
+                  nullable: true
+      responses:
+        '201':
+          description: survey template sections
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                description: resource uri of the new survey template section
+          links:
+            GetSurveyTemplateSection:
+              operationId: getSurveyTemplateSection
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `sectionId` parameter
+                  in the `GET /api/v1/admin/templates/{templateId}/{sectionId}`
+            UpdateSurveyTemplate:
+              operationId: updateSurveyTemplateSection
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `sectionId` parameter
+                  in the `PUT /api/v1/admin/templates/{templateId}/{sectionId}`
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Section'
+  /api/v1/admin/templates/{templateId}/sections/{sectionId}:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: sectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
+    get:
+      tags:
+        - surveyadmin
+      summary: Get a survey template section
+      operationId: getSurveyTemplateSection
+      responses:
+        '200':
+          description: survey template section
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+    put:
+      tags:
+        - surveyadmin
+      summary: Update a survey template section
+      operationId: updateSurveyTemplateSection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              requried:
+                - order
+                - title
+                - subtext
+                - icon
+              properties:
+                order:
+                  type: integer
+                  format: int64
+                  default: 0
+                title:
+                  type: string
+                  nullable: true
+                subtext:
+                  type: string
+                  nullable: true
+                icon:
+                  type: string
+                  format: uri
+                  nullable: true
+      responses:
+        '200':
+          description: survey template section
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+  /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: sectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
+    get:
+      tags:
+        - surveyadmin
+      summary: Get a survey template section's subsections
+      operationId: getSurveyTemplateSectionSubsections
+      responses:
+        '200':
+          description: survey template subsections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubSection'
+    post:
+      tags:
+        - surveyadmin
+      summary: Create a subsection in a survey template section
+      operationId: createSurveyTemplateSectionSubsection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              requried:
+                - title
+                - icon
+              properties:
+                title:
+                  type: string
+                  nullable: true
+                icon:
+                  type: string
+                  format: uri
+                  nullable: true
+      responses:
+        '201':
+          description: survey template subsection
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                description: resource uri of the new survey template section
+          links:
+            GetSurveyTemplateSection:
+              operationId: getSurveyTemplateSection
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `sectionId` parameter
+                  in the `GET /api/v1/admin/templates/{templateId}/{sectionId}`
+            UpdateSurveyTemplate:
+              operationId: updateSurveyTemplateSection
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `sectionId` parameter
+                  in the `PUT /api/v1/admin/templates/{templateId}/{sectionId}`
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Section'
+
+  /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subSectionId}:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: sectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: subSectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
+    get:
+      tags:
+        - surveyadmin
+      summary: Get a survey template subsection
+      operationId: getSurveyTemplateSectionSubsection
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: survey template subsection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubSection'
+    put:
+      tags:
+        - surveyadmin
+      summary: Update a survey template subsection
+      operationId: updateSurveyTemplateSectionSubsection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              requried:
+                - order
+                - title
+                - subtext
+                - icon
+              properties:
+                order:
+                  type: integer
+                  format: int64
+                  default: 0
+                title:
+                  type: string
+                  nullable: true
+                subtext:
+                  type: string
+                  nullable: true
+                icon:
+                  type: string
+                  format: uri
+                  nullable: true
+      responses:
+        '200':
+          description: survey template section
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
   /api/v1/admin/surveygroups:
     get:
       summary: Get survey groups
