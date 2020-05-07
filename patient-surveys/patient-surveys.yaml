@@ -757,7 +757,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Section'
+                  $ref: '#/components/schemas/SubSection'
   /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}:
     parameters:
       - in: path
@@ -844,6 +844,239 @@ paths:
       responses:
         '204':
           description: survey template subsection deleted
+  /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}/questions:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: sectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: subsectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
+    get:
+      tags:
+        - surveyadmin
+      summary: Get a survey template subsection's questions
+      operationId: getSurveyTemplateSectionSubsectionQuestions
+      responses:
+        '200':
+          description: survey template subsection questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientQuestion'
+    post:
+      tags:
+        - surveyadmin
+      summary: Create a question in a survey template subsection
+      operationId: createSurveyTemplateSectionSubsectionQuestion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              requried:
+                - slug
+                - prompt
+                - required
+                - input
+              properties:
+                slug:
+                  type: string
+                  nullable: true
+                prompt:
+                  type: string
+                required:
+                  type: boolean
+                  default: false
+                input:
+                  nullable: true
+                  oneOf:
+                      - $ref: '#/components/schemas/EnumeratedDropdown'
+                      - $ref: '#/components/schemas/RangedValueDropdown'
+                      - $ref: '#/components/schemas/EnumeratedRadioSelect'
+                      - $ref: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+                      - $ref: '#/components/schemas/NumericInput'
+                      - $ref: '#/components/schemas/DimensionInput'
+                      - $ref: '#/components/schemas/NumericRangedSliderInput'
+                  discriminator:
+                    propertyName: type
+                    mapping:
+                      enumDropdown: '#/components/schemas/EnumeratedDropdown'
+                      rangeDropdown: '#/components/schemas/RangedValueDropdown'
+                      enumRadio: '#/components/schemas/EnumeratedRadioSelect'
+                      enumRadioMultipleChoice: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+                      numInput: '#/components/schemas/NumericInput'
+                      dimensionInput: '#/components/schemas/DimensionInput'
+                      rangeSlider: '#/components/schemas/NumericRangedSliderInput'
+      responses:
+        '201':
+          description: survey template question created
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                description: resource uri of the new survey template section
+          links:
+            GetSurveyTemplateSectionSubsection:
+              operationId: getSurveyTemplateSectionSubsectionQuestion
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$request.path.sectionId'
+                subsectionId: '$request.path.sectionId'
+                questionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `questionId` parameter
+                  in the `GET /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}/questions/{questionId}`
+            UpdateSurveyTemplateSectionSubsection:
+              operationId: updateSurveyTemplateSectionSubsectionQuestion
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$request.path.sectionId'
+                subsectionId: '$request.path.sectionId'
+                questionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `questionId` parameter
+                  in the `PUT /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}/questions/{questionId}`
+            DeleteSurveyTemplateSectionSubsection:
+              operationId: deleteSurveyTemplateSectionSubsectionQuestion
+              parameters:
+                templateId: '$request.path.templateId'
+                sectionId: '$request.path.sectionId'
+                subsectionId: '$request.path.sectionId'
+                questionId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `questionId` parameter
+                  in the `DELETE /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}/questions/{questionId}`
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientQuestion'
+  /api/v1/admin/templates/{templateId}/sections/{sectionId}/subsections/{subsectionId}/questions/{questionId}:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: sectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: subsectionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: questionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
+    get:
+      tags:
+        - surveyadmin
+      summary: Get a survey template question
+      operationId: getSurveyTemplateSectionSubsectionQuestion
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '200':
+          description: survey template subsection question
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientQuestion'
+    put:
+      tags:
+        - surveyadmin
+      summary: Update a survey template question
+      operationId: updateSurveyTemplateSectionSubsectionQuestion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              requried:
+                - slug
+                - prompt
+                - required
+                - input
+              properties:
+                slug:
+                  type: string
+                  nullable: true
+                prompt:
+                  type: string
+                required:
+                  type: boolean
+                  default: false
+                input:
+                  nullable: true
+                  oneOf:
+                    - $ref: '#/components/schemas/EnumeratedDropdown'
+                    - $ref: '#/components/schemas/RangedValueDropdown'
+                    - $ref: '#/components/schemas/EnumeratedRadioSelect'
+                    - $ref: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+                    - $ref: '#/components/schemas/NumericInput'
+                    - $ref: '#/components/schemas/DimensionInput'
+                    - $ref: '#/components/schemas/NumericRangedSliderInput'
+                  discriminator:
+                    propertyName: type
+                    mapping:
+                      enumDropdown: '#/components/schemas/EnumeratedDropdown'
+                      rangeDropdown: '#/components/schemas/RangedValueDropdown'
+                      enumRadio: '#/components/schemas/EnumeratedRadioSelect'
+                      enumRadioMultipleChoice: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+                      numInput: '#/components/schemas/NumericInput'
+                      dimensionInput: '#/components/schemas/DimensionInput'
+                      rangeSlider: '#/components/schemas/NumericRangedSliderInput'
+      responses:
+        '200':
+          description: survey template question updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientQuestion'
+    delete:
+      tags:
+        - surveyadmin
+      summary: Delete a survey template question
+      operationId: deleteSurveyTemplateSectionSubsectionQuestion
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '204':
+          description: survey template question deleted
   /api/v1/admin/surveygroups:
     get:
       summary: Get survey groups
