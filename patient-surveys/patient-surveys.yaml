@@ -1387,6 +1387,7 @@ components:
         - logo
         - logoCaption
         - bannerTitle
+        - subtext
       properties:
         logo:
           type: string
@@ -1400,6 +1401,9 @@ components:
         bannerTitle:
           type: string
           description: provider name
+        subtext:
+          type: string
+          description: branding subtext
     SurveyGroup:
       type: object
       required:
