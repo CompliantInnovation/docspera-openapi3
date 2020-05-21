@@ -518,7 +518,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Section'
+                  $ref: '#/components/schemas/SectionTemplate'
     post:
       tags:
         - surveyadmin
@@ -549,6 +549,10 @@ paths:
                   type: string
                   format: uri
                   nullable: true
+                subsections:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SubSectionTemplate'
       responses:
         '201':
           description: survey template sections
@@ -1381,6 +1385,93 @@ components:
           nullable: true
         branding:
           $ref: '#/components/schemas/SurveyBranding'
+    SectionTemplate:
+      type: object
+      required:
+        - id
+        - order
+        - title
+        - subtext
+        - icon
+        - subsections
+      properties:
+        order:
+          type: integer
+          format: int64
+          description: relative order amongst siblings, lower (including negatives) is higher priority
+        title:
+          type: string
+          description: title of the section
+        subtext:
+          type: string
+          description: subtext of the header for the section
+        icon:
+          type: string
+          format: url
+          description: url to the icon to be displayed on the section header
+          nullable: true
+        subsections:
+          type: array
+          description: array of subsections to be displayed under this heading
+          items:
+            $ref: '#/components/schemas/SubSectionTemplate'
+    SubSectionTemplate:
+      type: object
+      required:
+        - title
+        - icon
+        - questions
+      properties:
+        title:
+          type: string
+          description: title of the subsection
+        icon:
+          type: string
+          format: url
+          description: url to the icon to be displayed on the subsection header
+          nullable: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientQuestion'
+    PatientQuestionTemplate:
+      type: object
+      required:
+        - slug
+        - prompt
+        - required
+        - input
+      properties:
+        slug:
+          type: string
+          description: question slug description, useful when a question is reused on multiple surveys or for debugging
+          nullable: true
+        prompt:
+          type: string
+          description: prompt that the patient is presented with
+        required:
+          type: boolean
+          default: false
+          description: whether the question must be answered by the user or not
+        input:
+          oneOf:
+            - $ref: '#/components/schemas/EnumeratedDropdown'
+            - $ref: '#/components/schemas/RangedValueDropdown'
+            - $ref: '#/components/schemas/EnumeratedRadioSelect'
+            - $ref: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+            - $ref: '#/components/schemas/NumericInput'
+            - $ref: '#/components/schemas/DimensionInput'
+            - $ref: '#/components/schemas/NumericRangedSliderInput'
+          discriminator:
+            propertyName: type
+            mapping:
+              enumDropdown: '#/components/schemas/EnumeratedDropdown'
+              rangeDropdown: '#/components/schemas/RangedValueDropdown'
+              enumRadio: '#/components/schemas/EnumeratedRadioSelect'
+              enumRadioMultipleChoice: '#/components/schemas/EnumeratedMultipleChoiceRadioSelect'
+              numInput: '#/components/schemas/NumericInput'
+              dimensionInput: '#/components/schemas/DimensionInput'
+              rangeSlider: '#/components/schemas/NumericRangedSliderInput'
     SurveyBranding:
       type: object
       required:
@@ -1625,6 +1716,7 @@ components:
         slug:
           type: string
           description: question slug description, useful when a question is reused on multiple surveys or for debugging
+          nullable: true
         prompt:
           type: string
           description: prompt that the patient is presented with
