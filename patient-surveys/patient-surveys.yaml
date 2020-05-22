@@ -528,31 +528,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              requried:
-                - order
-                - title
-                - subtext
-                - icon
-              properties:
-                order:
-                  type: integer
-                  format: int64
-                  default: 0
-                title:
-                  type: string
-                  nullable: true
-                subtext:
-                  type: string
-                  nullable: true
-                icon:
-                  type: string
-                  format: uri
-                  nullable: true
-                subsections:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SubSectionTemplate'
+              $ref: '#/components/schemas/SectionTemplate'
       responses:
         '201':
           description: survey template sections
@@ -658,7 +634,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Section'
+                $ref: '#/components/schemas/SectionTemplate'
     delete:
       tags:
         - surveyadmin
@@ -1275,10 +1251,15 @@ components:
     SubSection:
       type: object
       required:
+        - order
         - title
         - icon
         - questions
       properties:
+        order:
+          type: integer
+          format: int64
+          description: relative order amongst siblings, lower (including negatives) is higher priority
         title:
           type: string
           description: title of the subsection
