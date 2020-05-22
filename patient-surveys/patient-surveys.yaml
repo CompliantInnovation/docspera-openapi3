@@ -1000,15 +1000,20 @@ components:
         questions:
           type: array
           items:
-            $ref: '#/components/schemas/PatientQuestion'
+            $ref: '#/components/schemas/PatientQuestionTemplate'
     PatientQuestionTemplate:
       type: object
       required:
+        - order
         - slug
         - prompt
         - required
         - input
       properties:
+        order:
+          type: integer
+          format: int64
+          description: relative order amongst siblings, lower (including negatives) is higher priority
         slug:
           type: string
           description: question slug description, useful when a question is reused on multiple surveys or for debugging
@@ -1276,6 +1281,7 @@ components:
       type: object
       required:
         - id
+        - order
         - slug
         - prompt
         - required
@@ -1285,6 +1291,10 @@ components:
           type: string
           format: uuid
           description: unique question id
+        order:
+          type: integer
+          format: int64
+          description: relative order amongst siblings, lower (including negatives) is higher priority
         slug:
           type: string
           description: question slug description, useful when a question is reused on multiple surveys or for debugging
