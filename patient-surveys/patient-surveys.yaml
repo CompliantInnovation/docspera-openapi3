@@ -502,26 +502,27 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: limit
-        in: query
-        description: cursor pagination per page limit
-        schema:
-          type: integer
-          format: int64
-          minimum: 0
-          maximum: 100
-          default: 50
-        required: false
-      - name: token
-        in: query
-        description: cursor pagination token
-        schema:
-          type: string
-        required: false
     security:
       - signedCookie: []
       - jwt: []
     get:
+      parameters:
+        - name: limit
+          in: query
+          description: cursor pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: token
+          in: query
+          description: cursor pagination token
+          schema:
+            type: string
+          required: false
       tags:
         - surveyadmin
       summary: Get a survey template's sections
