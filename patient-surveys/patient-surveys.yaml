@@ -383,6 +383,8 @@ paths:
                       type: string
                       nullable: true
       responses:
+        '400':
+          description: bad request
         '201':
           description: survey template created
           headers:
@@ -427,6 +429,8 @@ paths:
       summary: Get a survey template
       operationId: getSurveyTemplate
       responses:
+        '404':
+          description: not found
         '200':
           description: survey template
           content:
@@ -480,6 +484,10 @@ paths:
                       type: string
                       nullable: true
       responses:
+        '400':
+          description: bad request
+        '404':
+          description: not found
         '200':
           description: survey template updated
           content:
@@ -492,6 +500,8 @@ paths:
       summary: Delete a survey template
       operationId: deleteSurveyTemplate
       responses:
+        '404':
+          description: not found
         '204':
           description: survey template deleted
   /api/v1/admin/templates/{templateId}/sections:
@@ -528,6 +538,8 @@ paths:
       summary: Get a survey template's sections
       operationId: getSurveyTemplateSections
       responses:
+        '404':
+          description: not found
         '200':
           description: survey template sections
           content:
@@ -545,8 +557,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SectionTemplate'
+              type: object
+              required:
+                - order
+                - title
+                - subtext
+                - icon
+                - subsections
+              properties:
+                order:
+                  type: integer
+                  format: int64
+                  description: relative order amongst siblings, lower (including negatives) is higher priority
+                title:
+                  type: string
+                  description: title of the section
+                subtext:
+                  type: string
+                  description: subtext of the header for the section
+                icon:
+                  type: string
+                  format: url
+                  description: url to the icon to be displayed on the section header
+                  nullable: true
+                subsections:
+                  type: array
+                  description: array of subsections to be displayed under this heading
+                  items:
+                    $ref: '#/components/schemas/SubSectionTemplate'
       responses:
+        '400':
+          description: bad request
+        '404':
+          description: not found
         '201':
           description: survey template sections
           headers:
@@ -583,9 +626,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Section'
+                $ref: '#/components/schemas/SectionTemplate'
   /api/v1/admin/templates/{templateId}/sections/{sectionId}:
     parameters:
       - in: path
@@ -614,7 +655,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Section'
+                $ref: '#/components/schemas/SectionTemplate'
     put:
       tags:
         - surveyadmin
@@ -630,22 +671,31 @@ paths:
                 - title
                 - subtext
                 - icon
+                - subsections
               properties:
                 order:
                   type: integer
                   format: int64
-                  default: 0
+                  description: relative order amongst siblings, lower (including negatives) is higher priority
                 title:
                   type: string
-                  nullable: true
+                  description: title of the section
                 subtext:
                   type: string
-                  nullable: true
+                  description: subtext of the header for the section
                 icon:
                   type: string
-                  format: uri
+                  format: url
+                  description: url to the icon to be displayed on the section header
                   nullable: true
+                subsections:
+                  type: array
+                  description: array of subsections to be displayed under this heading
+                  items:
+                    $ref: '#/components/schemas/SubSectionTemplate'
       responses:
+        '404':
+          description: not found
         '200':
           description: survey template section updated
           content:
@@ -658,8 +708,146 @@ paths:
       summary: Delete a survey template section
       operationId: deleteSurveyTemplateSection
       responses:
+        '404':
+          description: not found
         '204':
           description: survey template section deleted
+  /api/v1/admin/templates/{templateId}/surveygroups:
+    parameters:
+      - in: path
+        name: templateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    security:
+      - signedCookie: []
+      - jwt: []
+    get:
+      parameters:
+        - name: limit
+          in: query
+          description: cursor pagination per page limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+            default: 50
+          required: false
+        - name: token
+          in: query
+          description: cursor pagination token
+          schema:
+            type: string
+          required: false
+      tags:
+        - surveyadmin
+      summary: Get survey groups for this template
+      operationId: getSurveyTemplateGroups
+      responses:
+        '404':
+          description: not found
+        '200':
+          description: survey groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SurveyGroup'
+    post:
+      tags:
+        - surveyadmin
+      summary: Create a survey group from template
+      operationId: createSurveyGroupFromTemplate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - detinationTemplates
+              properties:
+                practiceId:
+                  type: integer
+                  format: int64
+                  description: practice id that the template belongs to
+                  nullable: true
+                userId:
+                  type: integer
+                  format: int64
+                  description: user id that the template belongs to
+                destinationTemplates:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - destinationType
+                      - templateId
+                      - templateMappings
+                    properties:
+                      destinationType:
+                        type: string
+                        description: survey destination type
+                        enum:
+                          - "email"
+                          - "sms"
+                      templateId:
+                        type: string
+                        description: liquid template service id
+                      templateMappings:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - field
+                            - mapping
+                          properties:
+                            field:
+                              type: string
+                              description: field in template, tbd
+                            mapping:
+                              type: string
+      responses:
+        '400':
+          description: bad request
+        '404':
+          description: not found
+        '201':
+          description: survey group
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                description: resource uri of the new survey template section
+          links:
+            GetSurveyGroup:
+              operationId: getSurveyGroup
+              parameters:
+                groupId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `groupId` parameter
+                  in the `GET /api/v1/admin/surveygroups/{groupid}`
+            UpdateSurveyTemplateSection:
+              operationId: updateSurveyGroup
+              parameters:
+                groupId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `groupId` parameter
+                  in the `PUT /api/v1/admin/surveygroups/{groupid}`
+            DeleteSurveyGroup:
+              operationId: deleteSurveyGroup
+              parameters:
+                groupId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `groupId` parameter
+                  in the `DELETE /api/v1/admin/surveygroups/{groupid}`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyGroup'
   /api/v1/admin/surveygroups:
     get:
       summary: Get survey groups
@@ -712,6 +900,64 @@ paths:
                 description: array of survey groups
                 items:
                   $ref: '#/components/schemas/SurveyGroup'
+    put:
+      tags:
+        - surveyadmin
+      summary: Update a survey group
+      operationId: updateSurveyGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                practiceId:
+                  type: integer
+                  format: int64
+                  description: practice id that the template belongs to
+                  nullable: true
+                userId:
+                  type: integer
+                  format: int64
+                  description: user id that the template belongs to
+                destinationTemplates:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - destinationType
+                      - templateId
+                      - templateMappings
+                    properties:
+                      destinationType:
+                        type: string
+                        description: survey destination type
+                        enum:
+                          - "email"
+                          - "sms"
+                      templateId:
+                        type: string
+                        description: liquid template service id
+                      templateMappings:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - field
+                            - mapping
+                          properties:
+                            field:
+                              type: string
+                              description: field in template, tbd
+                            mapping:
+                              type: string
+      responses:
+        '200':
+          description: survey group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyGroup'
   /api/v1/admin/surveygroups/{groupId}:
     get:
       summary: Get a survey group
@@ -731,16 +977,36 @@ paths:
         - signedCookie: []
         - jwt: []
       responses:
+        '404':
+          description: not found
         '200':
           description: list of survey groups
           content:
             application/json:
               schema:
-                type: array
-                description: array of survey groups
-                items:
-                  $ref: '#/components/schemas/SurveyGroup'
+                $ref: '#/components/schemas/SurveyGroup'
+    delete:
+      tags:
+        - surveyadmin
+      summary: Delete a survey group
+      description: deletes a survey group if it has not already been sent out to recipients
+      operationId: deleteSurveyGroup
+      responses:
+        '404':
+          description: not found
+        '400':
+          description: bad request
+        '204':
+          description: survey group deleted
   /api/v1/admin/surveygroups/{groupId}/recipients:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: survey group id
+        schema:
+          type: string
+          format: uuid
     get:
       summary: Get survey group recipients
       description: get survey group recipients
@@ -764,17 +1030,12 @@ paths:
           schema:
             type: string
           required: false
-        - name: groupId
-          in: path
-          required: true
-          description: survey group id
-          schema:
-            type: string
-            format: uuid
       security:
         - signedCookie: []
         - jwt: []
       responses:
+        '404':
+          description: not found
         '200':
           description: list of survey group recipients
           content:
@@ -784,6 +1045,178 @@ paths:
                 description: array of survey groups
                 items:
                   $ref: '#/components/schemas/SurveyRecipient'
+    post:
+      tags:
+        - surveyadmin
+      summary: Add a recipient to a survey group
+      operationId: createSurveyGroupRecipient
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - destinations
+              properties:
+                patientId:
+                  type: integer
+                  format: int64
+                  description: docspera patient id, if available
+                  nullable: true
+                calendarId:
+                  type: integer
+                  format: int64
+                  description: docspera calendar id, if available
+                  nullable: true
+                name:
+                  type: string
+                  description: recipient name
+                  nullable: true
+                mrn:
+                  type: string
+                  description: mrn to be displayed for tracking, if available
+                  nullable: true
+                destinations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SurveyRecipientDestination'
+      responses:
+        '400':
+          description: bad request
+        '404':
+          description: not found
+        '201':
+          description: survey group
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                description: resource uri of the new survey group
+          links:
+            GetSurveyRecipient:
+              operationId: getSurveyRecipient
+              parameters:
+                templateId: '$request.path.groupId'
+                recipientId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `recipientId` parameter
+                  in the `GET /api/v1/admin/surveygroups/{groupId}/recipients/{recipientId}`
+            UpdateSurveyGroup:
+              operationId: updateSurveyRecipient
+              parameters:
+                templateId: '$request.path.groupId'
+                recipientId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `recipientId` parameter
+                  in the `PUT /api/v1/admin/surveygroups/{groupId}/recipients/{recipientId}`
+            DeleteSurveyGroup:
+              operationId: deleteSurveyRecipient
+              parameters:
+                templateId: '$request.path.groupId'
+                recipientId: '$response.body#/id'
+                description: |
+                  The `id` value returned in the response can be used as the `recipientId` parameter
+                  in the `DELETE /api/v1/admin/surveygroups/{groupId}/recipients/{recipientId}`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyRecipient'
+  /api/v1/admin/surveygroups/{groupId}/recipients/{recipientId}:
+    get:
+      summary: Get a survey recipient
+      description: get a survey recipient
+      operationId: getSurveyRecipient
+      tags:
+        - surveyadmin
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: survey group id
+          schema:
+            type: string
+            format: uuid
+        - name: recipientId
+          in: path
+          required: true
+          description: survey recipient id
+          schema:
+            type: string
+            format: uuid
+      security:
+        - signedCookie: []
+        - jwt: []
+      responses:
+        '404':
+          description: not found
+        '200':
+          description: survey recipient
+          content:
+            application/json:
+              schema:
+                description: survey recipient
+                $ref: '#/components/schemas/SurveyRecipient'
+    put:
+      tags:
+        - surveyadmin
+      summary: Update a survey recipient
+      description: updates a survey recipient if the group has not already been sent
+      operationId: updateSurveyRecipient
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - destinations
+              properties:
+                patientId:
+                  type: integer
+                  format: int64
+                  description: docspera patient id, if available
+                  nullable: true
+                calendarId:
+                  type: integer
+                  format: int64
+                  description: docspera calendar id, if available
+                  nullable: true
+                name:
+                  type: string
+                  description: recipient name
+                  nullable: true
+                mrn:
+                  type: string
+                  description: mrn to be displayed for tracking, if available
+                  nullable: true
+                destinations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SurveyRecipientDestination'
+      responses:
+        '400':
+          description: bad request
+        '404':
+          description: not found
+        '200':
+          description: survey recipient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SurveyRecipient'
+    delete:
+      tags:
+        - surveyadmin
+      summary: Delete a survey recipient
+      description: deletes a survey recipient if the group has not already been sent
+      operationId: deleteSurveyRecipient
+      responses:
+        '404':
+          description: not found
+        '400':
+          description: bad request
+        '204':
+          description: survey recipient deleted
   /api/v1/admin/surveygroups/{groupId}/responses:
     get:
       summary: Get survey group responses
@@ -819,16 +1252,20 @@ paths:
         - signedCookie: []
         - jwt: []
       responses:
+        '400':
+          description: bad request
+        '404':
+          description: not found
         '200':
-          description: list of surveys
+          description: array of responses
           content:
             application/json:
               schema:
                 type: array
-                description: array of surveys
+                description: array of responses
                 items:
-                  type: object
-  /api/v1/admin/surveyresponses:
+                  $ref: '#/components/schemas/RecipientResponse'
+  /api/v1/admin/responses:
     get:
       summary: Get all survey responses
       description: Get all survey responses
@@ -900,6 +1337,28 @@ components:
       bearerFormat: JWT
 
   schemas:
+    RecipientResponse:
+      type: object
+      required:
+        - recipient
+        - groupId
+        - templateId
+        - responses
+      properties:
+        recipient:
+          $ref: '#/components/schemas/SurveyRecipient'
+        groupId:
+          type: string
+          format: uuid
+          description: group id for responses
+        templateId:
+          type: string
+          format: uuid
+          description: template id for responses
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionResponse'
     ErrorResponse:
       type: object
       required:
@@ -974,6 +1433,10 @@ components:
         - icon
         - subsections
       properties:
+        id:
+          type: string
+          format: uuid
+          description: survey uuid, also present in the request url
         order:
           type: integer
           format: int64
@@ -1087,16 +1550,15 @@ components:
     SurveyGroup:
       type: object
       required:
-        - groupId
+        - id
         - status
         - createdAt
         - userId
         - practiceId
-        - events
         - surveyTemplate
         - destinationTemplates
       properties:
-        group_id:
+        id:
           type: string
         status:
           type: integer
@@ -1115,17 +1577,13 @@ components:
           type: integer
           format: int64
           description: user id that the template belongs to
-        events:
-          type: array
-          items:
-            $ref: '#/components/schemas/SurveyGroupEvent'
         destinationTemplates:
           type: array
           items:
             type: object
             required:
               - destinationType
-              - template
+              - templateId
               - templateMappings
             properties:
               destinationType:
@@ -1134,9 +1592,9 @@ components:
                 enum:
                   - "email"
                   - "sms"
-              template:
+              templateId:
                 type: string
-                description: survey template, tbd
+                description: liquid template service id
               templateMappings:
                 type: array
                 items:
@@ -1150,10 +1608,6 @@ components:
                       description: field in template, tbd
                     mapping:
                       type: string
-                      enum:
-                        - patientName
-                        - caseDate
-                        - providerName
     SurveyRecipient:
       type: object
       required:
