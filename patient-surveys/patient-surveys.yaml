@@ -778,6 +778,8 @@ paths:
                   type: integer
                   format: int64
                   description: user id that the template belongs to
+                branding:
+                  $ref: '#/components/schemas/SurveyBranding'
                 destinationTemplates:
                   type: array
                   items:
@@ -1555,7 +1557,8 @@ components:
         - createdAt
         - userId
         - practiceId
-        - surveyTemplate
+        - templateId
+        - branding
         - destinationTemplates
       properties:
         id:
@@ -1566,8 +1569,12 @@ components:
           type: string
           format: 'date-time'
           description: timestamp of creation
-        surveyTemplate:
-          $ref: '#/components/schemas/SurveyTemplate'
+        templateId:
+          type: string
+          format: uuid
+          description: survey template id
+        branding:
+          $ref: '#/components/schemas/SurveyBranding'
         practiceId:
           type: integer
           format: int64
