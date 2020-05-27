@@ -243,9 +243,9 @@ paths:
             schema:
               type: object
               required:
-                - status
+                - surveyStatus
               properties:
-                status:
+                surveyStatus:
                   type: integer
                   format: int32
                   enum: [2]
@@ -1553,7 +1553,7 @@ components:
       type: object
       required:
         - id
-        - status
+        - groupStatus
         - createdAt
         - userId
         - practiceId
@@ -1563,7 +1563,7 @@ components:
       properties:
         id:
           type: string
-        status:
+        groupStatus:
           type: integer
         createdAt:
           type: string
@@ -1672,7 +1672,7 @@ components:
       type: object
       required:
         - id
-        - status
+        - surveyStatus
         - createdAt
         - lastEvent
         - branding
@@ -1682,7 +1682,7 @@ components:
           type: string
           format: uuid
           description: survey recipient uuid, also present in the request url
-        status:
+        surveyStatus:
           type: integer
           enum: [0,1,2]
           description: |
